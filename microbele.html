@@ -884,14 +884,15 @@ function doGuess(name){
     state.won=true; state.over=true; state.hints=6;
     const nd={...state.done,[state.gameDate]:{score:ng.length,won:true}};
     state.done=nd; saveDone(nd);
-  } else if(ng.length>=6){
-    state.over=true; state.hints=6;
-    const nd={...state.done,[state.gameDate]:{score:6,won:false}};
-    state.done=nd; saveDone(nd);
   } else {
     const h=Math.min(state.hints+1,6);
     state.animIdx=h-1;
     state.hints=h;
+    if(h>=6){
+      state.over=true;
+      const nd={...state.done,[state.gameDate]:{score:6,won:false}};
+      state.done=nd; saveDone(nd);
+    }
     render();
     animateHintCard();
     return;
