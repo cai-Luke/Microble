@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MicrobeLE — Clinical Micro Daily</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,600;0,6..72,700;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{min-height:100vh;background:#0c0e13;color:#e8eaf0;font-family:'Newsreader','Georgia',serif}
+  @keyframes hr{0%{opacity:0;transform:translateY(8px) scale(.98)}100%{opacity:1;transform:translateY(0) scale(1)}}
+  @keyframes wp{0%,100%{box-shadow:0 0 0 0 rgba(74,222,128,0.15)}50%{box-shadow:0 0 30px 10px rgba(74,222,128,0.15)}}
+  @keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+  input::placeholder{color:#555c72}
+  ::-webkit-scrollbar{width:6px}
+  ::-webkit-scrollbar-thumb{background:#252a36;border-radius:3px}
+
+  /* Layout */
+  #app{position:relative}
+  #dot-bg{position:fixed;inset:0;opacity:0.025;pointer-events:none;
+    background-image:radial-gradient(#9b6dff 1px,transparent 1px);background-size:24px 24px}
+
+  /* Header */
+  header{padding:16px 20px;display:flex;align-items:center;justify-content:space-between;
+    border-bottom:1px solid #252a36;background:linear-gradient(180deg,#14171f 0%,transparent 100%);
+    position:relative;z-index:10}
+  .hdr-btn{background:none;border:none;color:#8b92a8;cursor:pointer;
+    font-family:'JetBrains Mono',monospace;padding:6px 10px;border-radius:6px;transition:all 0.2s}
+  .hdr-btn:hover{color:#e8eaf0;background:#1a1e28}
+  .hdr-title{text-align:center;cursor:pointer}
+  .hdr-title h1{font-size:22px;font-weight:700;
+    background:linear-gradient(135deg,#9b6dff,#e8576e);
+    -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .hdr-subtitle{font-family:'JetBrains Mono',monospace;font-size:10px;color:#555c72;
+    letter-spacing:2px;text-transform:uppercase;margin-top:2px}
+  #hdr-archive-btn{font-size:12px}
+  #hdr-how-btn{font-size:13px}
+
+  /* Views */
+  .view{max-width:560px;margin:0 auto;padding:20px 20px 100px;animation:fi 0.3s ease}
+  .view.narrow{max-width:520px}
+
+  /* How to play */
+  #how-view h2{font-size:20px;margin-bottom:20px;color:#9b6dff}
+  .how-body{font-family:'JetBrains Mono',monospace;font-size:13px;line-height:1.8;color:#8b92a8}
+  .how-body p{margin-bottom:16px}
+  .how-hints-box{background:#14171f;border:1px solid #252a36;border-radius:8px;
+    padding:12px 16px;margin-bottom:16px;font-size:11px;line-height:2.2}
+  .how-hint-row span.num{color:#9b6dff}
+  .how-legend{margin-bottom:16px}
+  .how-note{color:#555c72;font-size:11px;margin-bottom:24px}
+  .got-it-btn{background:#9b6dff;color:#fff;border:none;padding:12px 28px;border-radius:8px;
+    font-size:13px;font-weight:600;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all 0.2s}
+  .got-it-btn:hover{background:#6b3fc4}
+
+  /* Archive */
+  #archive-view h2{font-size:18px;margin-bottom:20px;color:#8b92a8;
+    font-family:'JetBrains Mono',monospace;font-weight:500}
+  .archive-list{display:flex;flex-direction:column;gap:6px}
+  .archive-item{display:flex;align-items:center;justify-content:space-between;
+    background:#14171f;border:1px solid #252a36;border-radius:8px;padding:12px 16px;
+    color:#e8eaf0;font-size:13px;cursor:pointer;font-family:'JetBrains Mono',monospace;
+    transition:all 0.2s;width:100%;text-align:left}
+  .archive-item:hover{border-color:#9b6dff}
+  .archive-item.today{background:rgba(155,109,255,0.15);border-color:#6b3fc4}
+  .archive-item.today:hover{border-color:#9b6dff}
+  .arch-num{color:#555c72;margin-right:12px}
+  .arch-today-badge{margin-left:10px;font-size:10px;color:#9b6dff;
+    background:rgba(155,109,255,0.15);padding:2px 8px;border-radius:4px}
+  .arch-score-win{color:#4ade80}
+  .arch-score-lose{color:#e8576e}
+  .arch-score-none{color:#555c72}
+
+  /* Game view */
+  #game-date-info{text-align:center;margin-bottom:24px;font-family:'JetBrains Mono',monospace}
+  .puzzle-num{font-size:11px;color:#555c72;letter-spacing:1.5px;text-transform:uppercase}
+  .puzzle-date{font-size:13px;color:#8b92a8;margin-top:4px}
+  .goto-today-btn{margin-left:12px;background:rgba(155,109,255,0.15);border:1px solid #6b3fc4;
+    color:#9b6dff;padding:2px 10px;border-radius:4px;font-size:10px;cursor:pointer;
+    font-family:'JetBrains Mono',monospace;transition:all 0.2s}
+  .goto-today-btn:hover{background:rgba(155,109,255,0.25)}
+
+  /* Hint cards */
+  #hints-container{display:flex;flex-direction:column;gap:8px;margin-bottom:24px}
+  .hint-card{border-radius:10px;padding:14px 16px;transition:all 0.4s ease;border:1px solid #252a36}
+  .hint-card.revealed{background:#14171f}
+  .hint-card.unrevealed{background:transparent;opacity:0.35}
+  .hint-card.animating{animation:hr 0.5s ease}
+  .hint-card.last-win{background:rgba(74,222,128,0.15);border-color:#166534}
+  .hint-card.last-lose{border-color:#b83a4e}
+  .hint-header{display:flex;align-items:center;gap:10px}
+  .hint-icon{font-size:14px}
+  .hint-label{font-family:'JetBrains Mono',monospace;font-size:10px;font-weight:600;
+    letter-spacing:1.5px;text-transform:uppercase;color:#9b6dff}
+  .hint-label.dim{color:#555c72}
+  .hint-num-tag{margin-left:auto;font-family:'JetBrains Mono',monospace;font-size:10px;color:#555c72}
+  .hint-body{margin-top:8px;line-height:1.6;color:#8b92a8;
+    font-family:'JetBrains Mono',monospace;font-size:12.5px}
+  .hint-body.last{color:#e8eaf0;font-weight:600;font-family:'Newsreader',serif;font-size:15px}
+
+  /* Guesses */
+  #guesses-section{margin-bottom:16px}
+  .guesses-label{font-family:'JetBrains Mono',monospace;font-size:10px;color:#555c72;
+    letter-spacing:1px;text-transform:uppercase;margin-bottom:8px}
+  .guesses-list{display:flex;flex-wrap:wrap;gap:6px}
+  .guess-chip{font-family:'JetBrains Mono',monospace;font-size:12px;padding:4px 12px;
+    border-radius:6px;font-style:italic}
+  .guess-chip.correct{background:rgba(74,222,128,0.15);border:1px solid #166534;color:#4ade80}
+  .guess-chip.wrong{background:rgba(232,87,110,0.08);border:1px solid #b83a4e;color:#e8576e}
+
+  /* Result banner */
+  #result-banner{border-radius:12px;padding:20px;text-align:center;margin-bottom:20px}
+  #result-banner.win{background:rgba(74,222,128,0.15);border:1px solid #166534;
+    animation:wp 2s ease 1}
+  #result-banner.lose{background:rgba(232,87,110,0.06);border:1px solid #b83a4e;
+    animation:fi 0.5s ease}
+  .result-emoji{font-size:24px;margin-bottom:8px}
+  .result-label-win{font-family:'JetBrains Mono',monospace;font-size:13px;
+    color:#4ade80;font-weight:600;margin-bottom:4px}
+  .result-label-lose{font-family:'JetBrains Mono',monospace;font-size:13px;
+    color:#e8576e;font-weight:600;margin-bottom:4px}
+  .result-name{font-size:18px;font-weight:700;font-style:italic;margin-bottom:4px}
+  .result-score{font-family:'JetBrains Mono',monospace;font-size:12px;color:#8b92a8}
+  .result-def{font-family:'JetBrains Mono',monospace;font-size:11px;color:#8b92a8;
+    line-height:1.5;max-width:400px;margin:8px auto 0}
+  .result-btns{margin-top:16px;display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .share-btn{background:#9b6dff;color:#fff;border:none;padding:10px 20px;border-radius:8px;
+    font-size:12px;font-weight:600;cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all 0.2s}
+  .share-btn:hover{background:#6b3fc4}
+  .archive-link-btn{background:transparent;color:#8b92a8;border:1px solid #252a36;
+    padding:10px 20px;border-radius:8px;font-size:12px;cursor:pointer;
+    font-family:'JetBrains Mono',monospace;transition:all 0.2s}
+  .archive-link-btn:hover{color:#e8eaf0;border-color:#9b6dff}
+
+  /* Input row */
+  #input-row{position:relative}
+  .input-flex{display:flex;gap:8px}
+  .input-wrap{flex:1;position:relative}
+  #org-input{width:100%;padding:12px 16px;background:#14171f;border:1px solid #252a36;
+    border-radius:10px;color:#e8eaf0;font-family:'JetBrains Mono',monospace;
+    font-size:13px;font-style:italic;outline:none;transition:border-color 0.2s}
+  #org-input:focus{border-color:#9b6dff}
+  #autocomplete{position:absolute;top:100%;left:0;right:0;background:#14171f;
+    border:1px solid #252a36;border-radius:10px;margin-top:4px;overflow:hidden;
+    z-index:100;max-height:280px;overflow-y:auto;box-shadow:0 12px 40px rgba(0,0,0,0.5)}
+  .ac-item{padding:10px 16px;cursor:pointer;font-family:'JetBrains Mono',monospace;
+    font-size:12.5px;font-style:italic;color:#8b92a8;transition:all 0.15s;
+    border-bottom:1px solid #252a36;min-height:44px;display:flex;align-items:center}
+  .ac-item:last-child{border-bottom:none}
+  .ac-item:hover,.ac-item.active{background:#1a1e28;color:#e8eaf0}
+  #skip-btn{background:transparent;border:1px solid #252a36;color:#8b92a8;
+    padding:12px 16px;border-radius:10px;font-size:11px;white-space:nowrap;
+    cursor:pointer;font-family:'JetBrains Mono',monospace;transition:all 0.2s}
+  #skip-btn:hover:not(:disabled){border-color:#9b6dff;color:#e8eaf0}
+  #skip-btn:disabled{color:#555c72;opacity:0.4;cursor:default}
+  .input-info{font-family:'JetBrains Mono',monospace;font-size:10px;color:#555c72;
+    margin-top:8px;text-align:center}
+
+  /* Score dots */
+  #score-dots{display:flex;gap:4px;justify-content:center;margin-top:16px}
+  .score-dot{width:36px;height:8px;border-radius:4px;transition:all 0.3s ease}
+</style>
+</head>
+<body>
+<div id="app">
+  <div id="dot-bg"></div>
+  <header>
+    <button class="hdr-btn" id="hdr-how-btn">?</button>
+    <div class="hdr-title" id="hdr-logo">
+      <h1>MicrobeLE</h1>
+      <div class="hdr-subtitle">clinical micro daily</div>
+    </div>
+    <button class="hdr-btn" id="hdr-archive-btn">Archive</button>
+  </header>
+  <div id="main-content"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════════
+// ORGANISM DATABASE — 101 ORGANISMS
+// ═══════════════════════════════════════════════════════════════════
+const ORGANISMS = [
+  {id:1,name:"Staphylococcus aureus",g:"Positive",m:"Cocci",o:"Facultative anaerobe",
+   s:"Catalase positive · Beta-hemolytic · Ferments mannitol",
+   c:"Skin and soft tissue infections, bacteremia, endocarditis, osteomyelitis, toxic shock syndrome, food poisoning",
+   d:"COAGULASE POSITIVE; golden-yellow colonies; mannitol salt agar fermenter (yellow halo); DNase positive"},
+  {id:2,name:"Staphylococcus epidermidis",g:"Positive",m:"Cocci",o:"Facultative anaerobe",
+   s:"Catalase positive · Non-hemolytic · Does not ferment mannitol",
+   c:"Prosthetic device infections, catheter-related bloodstream infections, biofilm producer",
+   d:"Coagulase negative + novobiocin SUSCEPTIBLE; white non-hemolytic colonies; most common CoNS species"},
+  {id:3,name:"Staphylococcus saprophyticus",g:"Positive",m:"Cocci",o:"Facultative anaerobe",
+   s:"Catalase positive · Non-hemolytic · Does not ferment mannitol",
+   c:"Urinary tract infections in young sexually active women (second most common cause after E. coli)",
+   d:"Coagulase negative + novobiocin RESISTANT; key differentiator from S. epidermidis"},
+  {id:4,name:"Staphylococcus lugdunensis",g:"Positive",m:"Cocci",o:"Facultative anaerobe",
+   s:"Catalase positive · May be beta-hemolytic · PYR positive (unusual for staphylococci)",
+   c:"Aggressive native valve endocarditis mimicking S. aureus virulence despite being CoNS",
+   d:"Coagulase negative (tube) but ORNITHINE DECARBOXYLASE positive and PYR positive; mimics S. aureus clinically"},
+  {id:5,name:"Streptococcus pyogenes",g:"Positive",m:"Cocci in chains",o:"Facultative anaerobe",
+   s:"Catalase negative · Large-zone beta-hemolytic · PYR positive",
+   c:"Pharyngitis, scarlet fever, necrotizing fasciitis, rheumatic fever, post-streptococcal glomerulonephritis",
+   d:"Lancefield GROUP A; BACITRACIN SUSCEPTIBLE; large beta-hemolysis on sheep blood agar"},
+  {id:6,name:"Streptococcus agalactiae",g:"Positive",m:"Cocci in chains",o:"Facultative anaerobe",
+   s:"Catalase negative · Narrow-zone beta-hemolytic · Hippurate hydrolysis positive",
+   c:"Neonatal meningitis and early-onset sepsis, maternal chorioamnionitis, UTI in diabetics/elderly",
+   d:"Lancefield GROUP B; CAMP TEST positive (arrowhead hemolysis with S. aureus); orange-red pigment on Granada medium"},
+  {id:7,name:"Streptococcus pneumoniae",g:"Positive",m:"Diplococci",o:"Facultative anaerobe",
+   s:"Catalase negative · Alpha-hemolytic · Requires CO₂ enrichment",
+   c:"Community-acquired pneumonia (#1 cause), bacterial meningitis in adults, otitis media, sinusitis",
+   d:"OPTOCHIN SUSCEPTIBLE + BILE SOLUBLE; lancet-shaped; draughtsman colonies; Quellung reaction with capsular antisera"},
+  {id:8,name:"Enterococcus faecalis",g:"Positive",m:"Cocci in pairs and chains",o:"Facultative anaerobe",
+   s:"Catalase negative · Gamma- or alpha-hemolytic · PYR positive",
+   c:"UTIs, endocarditis, biliary tract infections, intra-abdominal infections",
+   d:"Lancefield group D; grows in 6.5% NaCl AND at 45°C; BILE ESCULIN positive (black); most common Enterococcus"},
+  {id:9,name:"Enterococcus faecium",g:"Positive",m:"Cocci in pairs and chains",o:"Facultative anaerobe",
+   s:"Catalase negative · PYR positive · Grows in 6.5% NaCl",
+   c:"Nosocomial infections, VRE bacteremia, difficult-to-treat endocarditis",
+   d:"ARABINOSE positive (distinguishes from E. faecalis); most common species among vancomycin-resistant enterococci (VRE)"},
+  {id:10,name:"Streptococcus gallolyticus",g:"Positive",m:"Cocci in chains",o:"Facultative anaerobe",
+   s:"Catalase negative · Non- or alpha-hemolytic · Lancefield group D",
+   c:"Endocarditis and bacteremia; blood culture isolation warrants colonoscopy",
+   d:"Bile esculin positive but does NOT grow in 6.5% NaCl (not Enterococcus); strong association with COLORECTAL CANCER"},
+  {id:11,name:"Streptococcus anginosus group",g:"Positive",m:"Cocci in chains",o:"Facultative anaerobe",
+   s:"Catalase negative · Variable hemolysis · VP positive",
+   c:"Abscess formation (brain, liver, lung, abdominal); empyema; mixed anaerobic infections",
+   d:"Small pinpoint colonies with BUTTERSCOTCH/CARAMEL ODOR; variable Lancefield grouping (A, C, F, G, or ungroupable)"},
+  {id:12,name:"Streptococcus mutans",g:"Positive",m:"Cocci in chains",o:"Facultative anaerobe",
+   s:"Catalase negative · Alpha-hemolytic · Viridans group streptococcus",
+   c:"Dental caries (primary etiologic agent); occasional subacute bacterial endocarditis",
+   d:"Optochin resistant + bile insoluble; produces GLUCANS from sucrose (adheres to enamel); mitis-salivarius agar with bacitracin; #1 cause of DENTAL CARIES"},
+  {id:13,name:"Aerococcus urinae",g:"Positive",m:"Cocci in tetrads",o:"Facultative anaerobe",
+   s:"Catalase negative · Alpha-hemolytic · PYR positive",
+   c:"Urinary tract infections primarily in elderly men",
+   d:"Cocci in TETRADS (not chains); LAP (leucine aminopeptidase) NEGATIVE; resembles viridans strep but clusters differently"},
+  {id:14,name:"Leuconostoc species",g:"Positive",m:"Cocci in pairs and chains",o:"Facultative anaerobe",
+   s:"Catalase negative · PYR negative · Produces gas from glucose",
+   c:"Opportunistic infections in immunocompromised; intrinsic vancomycin resistance",
+   d:"Intrinsically VANCOMYCIN RESISTANT gram-positive coccus; heterofermentative (gas from glucose); not Enterococcus (PYR negative)"},
+  {id:15,name:"Listeria monocytogenes",g:"Positive",m:"Coccobacilli",o:"Facultative anaerobe",
+   s:"Catalase positive · Narrow beta-hemolysis · Motile at room temperature",
+   c:"Neonatal meningitis/sepsis, meningitis in elderly/immunosuppressed, foodborne outbreaks (deli meats, soft cheeses, unpasteurized dairy)",
+   d:"TUMBLING MOTILITY at 25°C but NOT 37°C; umbrella pattern in semisolid agar; cold enrichment at 4°C; V/L diphtheroid-like forms"},
+  {id:16,name:"Corynebacterium diphtheriae",g:"Positive",m:"Pleomorphic rods",o:"Facultative anaerobe",
+   s:"Catalase positive · Non-motile · Club-shaped cells",
+   c:"Pharyngeal diphtheria (pseudomembrane), cutaneous diphtheria; toxin encoded by beta-prophage",
+   d:"CHINESE-LETTER V/L arrangement; METACHROMATIC GRANULES on Loeffler stain; ELEK TEST for toxin; Tinsdale agar (brown-black halo)"},
+  {id:17,name:"Corynebacterium jeikeium",g:"Positive",m:"Pleomorphic rods",o:"Aerobe",
+   s:"Catalase positive · Lipophilic · Non-hemolytic",
+   c:"Line-related bacteremia, wound infections in neutropenic/immunocompromised",
+   d:"Lipophilic diphtheroid requiring Tween 80; MULTIDRUG RESISTANT — susceptible ONLY to vancomycin"},
+  {id:18,name:"Bacillus anthracis",g:"Positive",m:"Large rods in chains",o:"Facultative anaerobe",
+   s:"Catalase positive · Non-hemolytic · Non-motile · Spore-forming",
+   c:"Cutaneous anthrax (black eschar), inhalation anthrax (woolsorter's disease), GI anthrax; bioterrorism agent",
+   d:"NONMOTILE Bacillus (unique in genus); MEDUSA-HEAD ground-glass colonies; poly-D-glutamic acid capsule on bicarbonate agar + CO₂"},
+  {id:19,name:"Bacillus cereus",g:"Positive",m:"Large rods in chains",o:"Facultative anaerobe",
+   s:"Catalase positive · Beta-hemolytic · Motile · Spore-forming",
+   c:"Two food poisoning syndromes: emetic (reheated fried rice) and diarrheal; post-traumatic endophthalmitis",
+   d:"Motile, beta-hemolytic Bacillus (unlike nonmotile B. anthracis); lecithinase positive; REHEATED RICE food poisoning"},
+  {id:20,name:"Clostridium perfringens",g:"Positive",m:"Large rods",o:"Obligate anaerobe (aerotolerant)",
+   s:"Lecithinase positive · Rarely forms spores in clinical specimens · Rapid growth for an anaerobe",
+   c:"Gas gangrene (clostridial myonecrosis), food poisoning (enterotoxin), necrotizing enteritis",
+   d:"DOUBLE zone of beta-hemolysis; STORMY FERMENTATION in litmus milk; Nagler reaction positive on egg yolk agar"},
+  {id:21,name:"Clostridioides difficile",g:"Positive",m:"Rods",o:"Obligate anaerobe",
+   s:"Subterminal spores · L-proline aminopeptidase positive · GDH antigen positive",
+   c:"Antibiotic-associated diarrhea, pseudomembranous colitis; nosocomial spore transmission",
+   d:"Yellow ground-glass colonies on CCFA; HORSE-BARN ODOR (p-cresol); toxin A/B detection; chartreuse UV fluorescence"},
+  {id:22,name:"Clostridium tetani",g:"Positive",m:"Rods",o:"Obligate anaerobe",
+   s:"Terminal spores · Indole negative · Lipase negative",
+   c:"Spastic paralysis from wound contamination; blocks glycine and GABA at spinal cord",
+   d:"DRUMSTICK/TENNIS RACQUET appearance (terminal round spore); tetanospasmin neurotoxin; swarming growth; causes TETANUS"},
+  {id:23,name:"Clostridium botulinum",g:"Positive",m:"Rods",o:"Obligate anaerobe",
+   s:"Subterminal spores · Lipase positive · Lecithinase positive",
+   c:"Descending FLACCID paralysis; foodborne, infant, and wound forms",
+   d:"Botulinum neurotoxin (most potent biological toxin); infant form linked to HONEY; diagnosis by toxin in serum/stool/food"},
+  {id:24,name:"Erysipelothrix rhusiopathiae",g:"Positive",m:"Rods",o:"Facultative anaerobe",
+   s:"Catalase negative · Alpha-hemolytic · Non-motile",
+   c:"Erysipeloid — violaceous skin infection in handlers of fish, meat, poultry (occupational disease)",
+   d:"H₂S POSITIVE on TSI (differentiates from Listeria); pipe-cleaner growth in gelatin stab; FISH/MEAT HANDLERS"},
+  {id:25,name:"Nocardia species",g:"Positive",m:"Filamentous rods",o:"Obligate aerobe",
+   s:"Catalase positive · Urease positive · Branching beaded filaments",
+   c:"Pulmonary nocardiosis in immunocompromised; dissemination to brain abscess; mycetoma",
+   d:"PARTIALLY ACID-FAST (modified Kinyoun); chalky white/orange colonies; aerial hyphae; grows on LJ media"},
+  {id:26,name:"Actinomyces israelii",g:"Positive",m:"Filamentous rods",o:"Anaerobe",
+   s:"Catalase negative · NOT acid-fast (unlike Nocardia) · Indole negative",
+   c:"Cervicofacial actinomycosis (lumpy jaw), thoracic/abdominal actinomycosis; associated with IUD use",
+   d:"SULFUR GRANULES in tissue/pus; MOLAR TOOTH colonies after 5–7 days anaerobic incubation; lumpy jaw"},
+  {id:27,name:"Rhodococcus equi",g:"Positive",m:"Coccobacilli",o:"Obligate aerobe",
+   s:"Catalase positive · Partially acid-fast · Rod-coccus cycle",
+   c:"Cavitary pneumonia in HIV/AIDS patients; associated with horse and soil exposure",
+   d:"SALMON-PINK mucoid colonies; equi factor positive (CAMP-like with Listeria); horse/soil exposure + AIDS"},
+  {id:28,name:"Arcanobacterium haemolyticum",g:"Positive",m:"Pleomorphic rods",o:"Facultative anaerobe",
+   s:"Catalase negative · Beta-hemolytic · Reverse CAMP positive",
+   c:"Pharyngitis with scarlatiniform rash in adolescents/young adults — mimics Group A strep",
+   d:"Better hemolysis on HUMAN blood agar than sheep; TEENAGER PHARYNGITIS WITH RASH; diphtheroid morphology"},
+  {id:29,name:"Gardnerella vaginalis",g:"Variable",m:"Coccobacilli",o:"Facultative anaerobe",
+   s:"Catalase negative · Oxidase negative · Hippurate hydrolysis positive",
+   c:"Bacterial vaginosis (with anaerobes); fishy amine odor with KOH (whiff test)",
+   d:"CLUE CELLS on wet prep (epithelial cells studded with bacteria); HBT agar with diffuse beta-hemolysis on human blood only"},
+  {id:30,name:"Cutibacterium acnes",g:"Positive",m:"Pleomorphic rods",o:"Anaerobe (aerotolerant)",
+   s:"Catalase positive · Indole positive · Lipase positive",
+   c:"Acne vulgaris; prosthetic joint infections (especially shoulder); frequent blood culture contaminant",
+   d:"Formerly PROPIONIBACTERIUM ACNES; slow-growing (5–14 days) anaerobic diphtheroid; prosthetic SHOULDER joint infections"},
+  {id:31,name:"Neisseria gonorrhoeae",g:"Negative",m:"Diplococci",o:"Aerobe (requires CO₂)",
+   s:"Oxidase positive · Superoxol strongly positive · No growth at 22°C",
+   c:"Gonorrhea (urethritis, cervicitis, PID), ophthalmia neonatorum, disseminated gonococcal infection",
+   d:"Grows on THAYER-MARTIN (MTM) but NOT sheep blood agar; CTA glucose positive ONLY (not maltose); causes GONORRHEA"},
+  {id:32,name:"Neisseria meningitidis",g:"Negative",m:"Diplococci",o:"Aerobe (requires CO₂)",
+   s:"Oxidase positive · Grows on blood agar AND chocolate agar · Mucoid (encapsulated)",
+   c:"Bacterial meningitis (adolescents, outbreaks), meningococcemia with petechiae, Waterhouse-Friderichsen syndrome",
+   d:"CTA glucose AND maltose positive; polysaccharide capsule; PURPURA FULMINANS; meningococcemia"},
+  {id:33,name:"Moraxella catarrhalis",g:"Negative",m:"Diplococci",o:"Aerobe",
+   s:"Oxidase positive · DNase positive · Non-hemolytic",
+   c:"Otitis media, sinusitis, COPD exacerbation; third most common cause of otitis media",
+   d:"HOCKEY-PUCK colonies (slide intact across agar); BUTYRATE ESTERASE (tributyrin) test positive; most strains produce beta-lactamase"},
+  {id:34,name:"Escherichia coli",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Lactose fermenter · Indole positive · Oxidase negative",
+   c:"#1 cause of UTIs, neonatal meningitis (K1 capsule), traveler's diarrhea (ETEC), HUS (STEC O157:H7)",
+   d:"GREEN METALLIC SHEEN on EMB agar; IMViC ++−−; pink colonies on MacConkey; O157:H7 sorbitol negative on SMAC"},
+  {id:35,name:"Klebsiella pneumoniae",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Lactose fermenter · Indole negative · Non-motile",
+   c:"Nosocomial pneumonia (currant-jelly sputum), UTIs, liver abscess (hypervirulent), KPC carbapenem resistance",
+   d:"MUCOID encapsulated colonies; STRING TEST positive (hypervirulent K1/K2); urease positive; thick polysaccharide capsule"},
+  {id:36,name:"Klebsiella oxytoca",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Lactose fermenter · Indole POSITIVE (unlike K. pneumoniae) · Urease positive",
+   c:"Antibiotic-associated hemorrhagic colitis; nosocomial infections",
+   d:"Indole-positive Klebsiella; HEMORRHAGIC COLITIS association; mucoid colonies like K. pneumoniae"},
+  {id:37,name:"Proteus mirabilis",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Lactose non-fermenter · Urease positive (strongly) · H₂S positive",
+   c:"UTIs with alkaline urine and struvite (staghorn) kidney stones; wound infections",
+   d:"SWARMING motility on blood agar (concentric waves); indole NEGATIVE; PDA positive; STRUVITE STONES"},
+  {id:38,name:"Proteus vulgaris",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Lactose non-fermenter · Urease positive · H₂S positive · Swarming",
+   c:"UTIs, wound infections; historical serologic cross-reaction with Rickettsia",
+   d:"Indole POSITIVE (unlike P. mirabilis); WEIL-FELIX OX-19 and OX-2 antigens cross-react with Rickettsia"},
+  {id:39,name:"Serratia marcescens",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Late/non-lactose-fermenter · DNase positive · Gelatinase positive",
+   c:"Nosocomial infections (respiratory, urinary), osteomyelitis in IV drug users",
+   d:"RED-PIGMENTED colonies (PRODIGIOSIN) at 25°C; lipase positive; intrinsically COLISTIN RESISTANT"},
+  {id:40,name:"Enterobacter cloacae complex",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Lactose fermenter · VP positive · Motile",
+   c:"Nosocomial infections; may develop resistance DURING cephalosporin therapy",
+   d:"SPICE organism with INDUCIBLE AmpC beta-lactamase; resistance emerges on 3rd-gen cephalosporins via derepression"},
+  {id:41,name:"Citrobacter freundii",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Variable lactose fermentation · H₂S positive · Citrate positive",
+   c:"Nosocomial UTIs, respiratory infections, neonatal meningitis",
+   d:"H₂S-positive, citrate-positive SPICE organism (inducible AmpC); can RESEMBLE SALMONELLA biochemically; indole negative"},
+  {id:42,name:"Citrobacter koseri",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Indole positive · H₂S NEGATIVE (unlike C. freundii) · Citrate positive",
+   c:"Neonatal meningitis with brain abscess formation — characteristic neonatal association",
+   d:"Indole-positive, H₂S-negative Citrobacter; NEONATAL BRAIN ABSCESSES (classic board association)"},
+  {id:43,name:"Morganella morganii",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Lactose non-fermenter · Urease positive · Indole positive",
+   c:"UTIs, wound infections, nosocomial bacteremia; Proteeae tribe member",
+   d:"Does NOT SWARM (unlike Proteus); PDA positive; ORNITHINE DECARBOXYLASE positive differentiates from Providencia"},
+  {id:44,name:"Providencia stuartii",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Lactose non-fermenter · Indole positive · PDA positive",
+   c:"Catheter-associated UTIs in long-term care facilities; frequently multidrug resistant",
+   d:"UREASE POSITIVE (unique among Providencia); catheter-associated UTI in CHRONIC CARE settings"},
+  {id:45,name:"Salmonella enterica (non-typhoidal)",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Lactose non-fermenter · H₂S positive · Motile (peritrichous)",
+   c:"Gastroenteritis (poultry, eggs, reptiles), bacteremia, osteomyelitis in sickle cell disease",
+   d:"BLACK-CENTERED colonies on HE and XLD agar (H₂S); lysine decarboxylase positive; SICKLE CELL osteomyelitis"},
+  {id:46,name:"Salmonella enterica ser. Typhi",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Lactose non-fermenter · Weakly H₂S positive · Motile",
+   c:"Typhoid/enteric fever — sustained bacteremia, rose spots, hepatosplenomegaly; human-restricted pathogen",
+   d:"CITRATE NEGATIVE (unlike most Salmonella); Vi capsular antigen; chronic GALLBLADDER CARRIER state; typhoid fever"},
+  {id:47,name:"Shigella species",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Lactose non-fermenter · H₂S NEGATIVE · Non-motile",
+   c:"Bacillary dysentery (bloody diarrhea with mucus); extremely low infectious dose (~10 organisms)",
+   d:"NON-MOTILE (key vs Salmonella); lysine decarboxylase negative; Shiga toxin (S. dysenteriae 1) → HUS; ~10 organism infectious dose"},
+  {id:48,name:"Yersinia enterocolitica",g:"Negative",m:"Coccobacilli",o:"Facultative anaerobe",
+   s:"Urease positive · Oxidase negative · Motile at 25°C but not 37°C",
+   c:"Mesenteric lymphadenitis mimicking appendicitis (pseudoappendicitis) in children; associated with pork",
+   d:"BULL'S-EYE colonies on CIN agar; cold enrichment at 4°C; TRANSFUSION-ASSOCIATED SEPSIS (grows at 4°C)"},
+  {id:49,name:"Yersinia pestis",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Urease NEGATIVE (unlike Y. enterocolitica) · Nonmotile at ALL temperatures · Catalase positive",
+   c:"Plague — bubonic (inguinal bubo), septicemic, pneumonic; flea vector from rodents; bioterrorism agent",
+   d:"SAFETY-PIN bipolar staining; fried-egg colonies at 28°C; BSL-3 select agent; BUBONIC PLAGUE"},
+  {id:50,name:"Cronobacter sakazakii",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Yellow-pigmented · Oxidase negative · Alpha-glucosidase positive",
+   c:"Neonatal meningitis and necrotizing enterocolitis from contaminated powdered infant formula",
+   d:"Formerly Enterobacter sakazakii; POWDERED INFANT FORMULA contamination; blue-green on chromogenic agars"},
+  {id:51,name:"Edwardsiella tarda",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"H₂S positive · Indole positive · Lysine decarboxylase positive",
+   c:"Gastroenteritis and wound infections from freshwater/marine exposure",
+   d:"H₂S + indole positive Enterobacterales; FRESHWATER FISH (catfish) exposure; wound infections and diarrhea"},
+  {id:52,name:"Hafnia alvei",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Lactose non-fermenter · Lysine decarboxylase positive · VP temperature-dependent",
+   c:"Rare opportunistic pathogen; important because frequently misidentified as Salmonella",
+   d:"VP positive at 22°C but NEGATIVE at 37°C; MISIDENTIFIED AS SALMONELLA; temperature-dependent VP reaction"},
+  {id:53,name:"Plesiomonas shigelloides",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Oxidase POSITIVE (very unusual for this order) · Lysine decarboxylase positive · Arginine dihydrolase positive",
+   c:"Gastroenteritis from contaminated water, raw shellfish, tropical travel",
+   d:"The ONLY OXIDASE-POSITIVE member of Enterobacterales; waterborne/shellfish gastroenteritis"},
+  {id:54,name:"Pantoea agglomerans",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Yellow-pigmented · VP positive · Indole negative",
+   c:"Wound infections from penetrating injuries with plant material; septic arthritis",
+   d:"Formerly Enterobacter agglomerans; PLANT THORN INJURIES (roses, cacti); yellow-pigmented Enterobacterales"},
+  {id:55,name:"Pseudomonas aeruginosa",g:"Negative",m:"Rods",o:"Obligate aerobe",
+   s:"Oxidase positive · Non-fermenter · Motile (polar flagellum)",
+   c:"Burn wound infections, VAP, chronic CF lung infection, swimmer's ear, hot tub folliculitis, ecthyma gangrenosum",
+   d:"GRAPE/TORTILLA ODOR; blue-green PYOCYANIN pigment + fluorescent pyoverdin; grows at 42°C; mucoid variant in CF"},
+  {id:56,name:"Burkholderia cepacia complex",g:"Negative",m:"Rods",o:"Obligate aerobe",
+   s:"Oxidase positive (weakly) · Non-fermenter · Resistant to aminoglycosides and colistin",
+   c:"Pulmonary infections in cystic fibrosis — cepacia syndrome (rapid clinical decline); patient-to-patient transmission",
+   d:"Grows on BCSA (B. cepacia selective agar); CEPACIA SYNDROME in CF; strict infection control required"},
+  {id:57,name:"Stenotrophomonas maltophilia",g:"Negative",m:"Rods",o:"Obligate aerobe",
+   s:"Oxidase NEGATIVE (unusual for non-fermenter) · DNase positive · Lysine decarboxylase positive",
+   c:"Nosocomial pneumonia and bacteremia in ventilated/immunocompromised patients",
+   d:"Intrinsically CARBAPENEM-RESISTANT (L1/L2 beta-lactamases); treated with TMP-SMX; AMMONIA/BLEACH odor; oxidase-negative non-fermenter"},
+  {id:58,name:"Acinetobacter baumannii",g:"Negative",m:"Coccobacilli",o:"Obligate aerobe",
+   s:"Oxidase negative · Catalase positive · Non-fermenter",
+   c:"MDR nosocomial VAP, battlefield/military wound infections, bacteremia; survives on dry surfaces for weeks",
+   d:"Gram-negative coccobacillus often APPEARING GRAM-POSITIVE on smear; grows at 44°C; XDR/PDR; BATTLEFIELD WOUND infections"},
+  {id:59,name:"Elizabethkingia meningoseptica",g:"Negative",m:"Rods",o:"Obligate aerobe",
+   s:"Oxidase positive · Indole positive · Gelatinase positive",
+   c:"Neonatal meningitis in premature NICU infants; nosocomial outbreaks through contaminated water",
+   d:"Non-fermenter SUSCEPTIBLE TO VANCOMYCIN (paradoxical for gram-negative); pale yellow; lavender on MacConkey"},
+  {id:60,name:"Haemophilus influenzae",g:"Negative",m:"Coccobacilli",o:"Facultative anaerobe",
+   s:"Oxidase positive · Catalase positive · Does NOT grow on sheep blood agar",
+   c:"Meningitis/epiglottitis in unvaccinated children (type b), otitis media, sinusitis; NTHi causes COPD exacerbations",
+   d:"Requires BOTH factor X (hemin) AND factor V (NAD); SATELLITING around S. aureus; tiny dewdrop colonies on chocolate agar"},
+  {id:61,name:"Haemophilus ducreyi",g:"Negative",m:"Coccobacilli",o:"Facultative anaerobe",
+   s:"Oxidase positive · Requires factor X only (not V) · Very difficult to culture",
+   c:"Chancroid — PAINFUL genital ulcer with inguinal lymphadenopathy (bubo); STI",
+   d:"'SCHOOL OF FISH' / 'railroad track' Gram stain arrangement; painful chancroid (unlike PAINLESS syphilitic chancre)"},
+  {id:62,name:"Bordetella pertussis",g:"Negative",m:"Coccobacilli",o:"Obligate aerobe",
+   s:"Oxidase positive · Urease negative (unlike B. parapertussis) · Catalase positive",
+   c:"Whooping cough — paroxysmal coughing with inspiratory whoop; marked lymphocytosis in blood",
+   d:"MERCURY-DROP colonies on Bordet-Gengou or Regan-Lowe agar; pertussis toxin; WHOOPING COUGH; slow-growing (3–7 days)"},
+  {id:63,name:"Brucella species",g:"Negative",m:"Coccobacilli",o:"Aerobe",
+   s:"Oxidase positive · Urease positive (rapidly) · Catalase positive",
+   c:"Undulant fever, granulomatous hepatitis, sacroiliitis, endocarditis; zoonotic from unpasteurized dairy/livestock",
+   d:"BSL-3; high LAB-ACQUIRED INFECTION risk; slow-growing; extended blood culture incubation; UNPASTEURIZED DAIRY"},
+  {id:64,name:"Francisella tularensis",g:"Negative",m:"Coccobacilli",o:"Obligate aerobe",
+   s:"Oxidase negative · Weakly catalase positive · Does NOT grow on MacConkey or standard blood agar",
+   c:"Tularemia — ulceroglandular, pneumonic, oculoglandular; rabbits, ticks, deer flies; bioterrorism agent",
+   d:"Requires CYSTEINE for growth (chocolate agar, BCYE); BSL-3; TULAREMIA from RABBIT handling or tick bites"},
+  {id:65,name:"Pasteurella multocida",g:"Negative",m:"Coccobacilli",o:"Facultative anaerobe",
+   s:"Oxidase positive · Catalase positive · Indole positive",
+   c:"Wound infection from animal bites/scratches — rapid-onset cellulitis within 24 hours",
+   d:"Does NOT grow on MacConkey; musty/mushroom odor; rapid cellulitis from CAT/DOG BITES; bipolar staining"},
+  {id:66,name:"Eikenella corrodens",g:"Negative",m:"Rods",o:"Facultative anaerobe",
+   s:"Oxidase positive · Catalase negative · Enhanced growth in CO₂",
+   c:"Human bite wound infections, endocarditis, infections in IV drug users who lick needles",
+   d:"Colonies PIT/CORRODE the agar; BLEACH-LIKE odor; HACEK group; HUMAN BITE infections"},
+  {id:67,name:"Aggregatibacter species",g:"Negative",m:"Coccobacilli",o:"Capnophilic",
+   s:"Oxidase variable · Catalase positive · Slow-growing in CO₂",
+   c:"HACEK endocarditis; aggressive periodontitis; brain abscess",
+   d:"STAR-SHAPED internal colony morphology; adherent colonies on chocolate agar; HACEK group; A. actinomycetemcomitans"},
+  {id:68,name:"Cardiobacterium hominis",g:"Negative",m:"Pleomorphic rods",o:"Capnophilic",
+   s:"Oxidase positive · Catalase negative · Indole positive",
+   c:"HACEK endocarditis; normal upper respiratory flora",
+   d:"Pleomorphic rods forming ROSETTE clusters; named for cardiac predilection (Cardiobacterium); HACEK group"},
+  {id:69,name:"Kingella kingae",g:"Negative",m:"Coccobacilli",o:"Facultative anaerobe",
+   s:"Oxidase positive · Catalase negative · Beta-hemolytic",
+   c:"Septic arthritis, osteomyelitis, and endocarditis in YOUNG CHILDREN (6 months–4 years)",
+   d:"HACEK group; pits agar; best recovered in BLOOD CULTURE BOTTLES; #1 SKELETAL INFECTIONS in children <2 years"},
+  {id:70,name:"Legionella pneumophila",g:"Negative",m:"Rods",o:"Obligate aerobe",
+   s:"Catalase positive · Stains poorly on Gram stain · Does NOT grow on blood or chocolate agar",
+   c:"Legionnaires' disease (severe atypical pneumonia), Pontiac fever; contaminated water systems; intracellular pathogen",
+   d:"Requires BCYE agar (L-CYSTEINE + IRON); URINE ANTIGEN detects serogroup 1; cut-glass colonies; waterborne pneumonia"},
+  {id:71,name:"Bartonella henselae",g:"Negative",m:"Curved rods",o:"Aerobe (requires CO₂)",
+   s:"Oxidase negative · Catalase negative · Extremely slow-growing (2–6 weeks)",
+   c:"Regional lymphadenopathy in immunocompetent; bacillary angiomatosis and peliosis hepatis in HIV/AIDS",
+   d:"Warthin-Starry SILVER STAIN; cauliflower-like colonies; best diagnosed by serology; CAT SCRATCH DISEASE"},
+  {id:72,name:"Capnocytophaga canimorsus",g:"Negative",m:"Fusiform rods",o:"Capnophilic",
+   s:"Oxidase positive · Catalase positive · Gliding motility",
+   c:"Fulminant sepsis, DIC, and purpura fulminans after animal bites — especially in asplenic or alcoholic patients",
+   d:"Fusiform capnophilic rod; DOG BITES in ASPLENIC or ALCOHOLIC patients → fulminant sepsis; slow-growing (5–7 days)"},
+  {id:73,name:"Campylobacter jejuni",g:"Negative",m:"Curved rods",o:"Microaerophilic",
+   s:"Oxidase positive · Catalase positive · Hippurate hydrolysis positive",
+   c:"#1 cause of bacterial gastroenteritis worldwide; associated with poultry; post-infectious Guillain-Barré syndrome",
+   d:"SEAGULL-WING/S-shaped morphology; grows at 42°C; Campy-BAP/CCDA agar; GUILLAIN-BARRÉ after gastroenteritis"},
+  {id:74,name:"Helicobacter pylori",g:"Negative",m:"Curved rods",o:"Microaerophilic",
+   s:"Urease positive (strongly/rapidly) · Oxidase positive · Catalase positive",
+   c:"Chronic gastritis, peptic/duodenal ulcers, gastric adenocarcinoma, gastric MALT lymphoma",
+   d:"CLO TEST (rapid urease) on gastric biopsy; grows at 37°C NOT 42°C; PEPTIC ULCERS + GASTRIC CANCER + MALT LYMPHOMA"},
+  {id:75,name:"Vibrio cholerae",g:"Negative",m:"Curved rods",o:"Facultative anaerobe",
+   s:"Oxidase positive · String test positive · Grows in 1% NaCl but NOT 6%",
+   c:"Profuse rice-water diarrhea, massive fluid loss, dehydration; O1 and O139 serogroups; contaminated water",
+   d:"YELLOW colonies on TCBS agar (sucrose fermenter); comma-shaped; alkaline peptone water (pH 8.6); CHOLERA TOXIN; RICE-WATER diarrhea"},
+  {id:76,name:"Vibrio vulnificus",g:"Negative",m:"Curved rods",o:"Facultative anaerobe",
+   s:"Oxidase positive · Lactose POSITIVE (unusual for Vibrio) · Halophilic",
+   c:"Fatal septicemia from raw oyster consumption in liver disease/iron overload; hemorrhagic bullous wound infections from warm saltwater",
+   d:"GREEN on TCBS (non-sucrose fermenter); lactose-fermenting halophile; RAW OYSTERS + LIVER DISEASE/HEMOCHROMATOSIS → fatal septicemia"},
+  {id:77,name:"Vibrio parahaemolyticus",g:"Negative",m:"Curved rods",o:"Facultative anaerobe",
+   s:"Oxidase positive · Halophilic · Non-sucrose-fermenter",
+   c:"Gastroenteritis from raw/undercooked seafood; most common Vibrio causing seafood diarrhea in the US",
+   d:"GREEN on TCBS; KANAGAWA PHENOMENON positive (thermostable direct hemolysin); Wagatsuma agar beta-hemolysis"},
+  {id:78,name:"Bacteroides fragilis",g:"Negative",m:"Pleomorphic rods",o:"Obligate anaerobe",
+   s:"Catalase positive (unusual for anaerobe) · Indole negative · Bile-resistant",
+   c:"Most common anaerobic pathogen; intra-abdominal abscesses, peritonitis, bacteremia; inherently penicillin-resistant",
+   d:">1mm black colonies on BBE AGAR; BILE-RESISTANT (grows in 20% bile — unlike other anaerobes); #1 anaerobic pathogen"},
+  {id:79,name:"Prevotella melaninogenica",g:"Negative",m:"Rods",o:"Obligate anaerobe",
+   s:"Bile-SENSITIVE (unlike Bacteroides) · Pigmented · Lipase variable",
+   c:"Oral, pulmonary, genital tract anaerobic infections; aspiration pneumonia; periodontal disease",
+   d:"BROWN-BLACK PIGMENTED colonies (melanin) after 5–7 days; BRICK-RED UV fluorescence; bile-sensitive (unlike Bacteroides)"},
+  {id:80,name:"Fusobacterium nucleatum",g:"Negative",m:"Fusiform rods",o:"Obligate anaerobe",
+   s:"Indole positive · Lipase negative · Catalase negative",
+   c:"Periodontal disease, brain abscess, aspiration pneumonia; post-pharyngitis septic complication in young adults",
+   d:"Spindle-shaped with pointed ends; LEMIERRE SYNDROME (septic internal jugular vein thrombophlebitis after pharyngitis)"},
+  {id:81,name:"Veillonella species",g:"Negative",m:"Cocci",o:"Obligate anaerobe",
+   s:"Catalase negative · Nitrate reduction positive · Produces gas from lactate",
+   c:"Rare opportunistic infections; normal oral/GI flora; unusual morphology for gram-negatives",
+   d:"OBLIGATELY ANAEROBIC gram-negative COCCUS — one of the very few gram-negative cocci that is an obligate anaerobe"},
+  {id:82,name:"Finegoldia magna",g:"Positive",m:"Cocci in chains and pairs",o:"Obligate anaerobe",
+   s:"Catalase negative · Indole negative · SPS susceptible",
+   c:"Soft tissue, bone/joint, prosthetic device infections",
+   d:"Formerly PEPTOSTREPTOCOCCUS MAGNUS; most clinically significant ANAEROBIC gram-positive coccus"},
+  {id:83,name:"Mycobacterium tuberculosis",g:"Acid-fast",m:"Rods",o:"Obligate aerobe",
+   s:"Slow-growing (2–6 weeks) · Grows on LJ and Middlebrook media · 37°C optimum",
+   c:"Pulmonary TB, miliary TB, TB meningitis, Pott disease (spinal TB); airborne; reportable",
+   d:"NIACIN POSITIVE + NITRATE POSITIVE; heat-stable catalase (68°C) NEGATIVE; CORDING (serpentine) on smear; buff rough colonies on LJ"},
+  {id:84,name:"Mycobacterium avium complex",g:"Acid-fast",m:"Rods",o:"Obligate aerobe",
+   s:"Slow-growing · Niacin negative · Nitrate negative · Heat-stable catalase positive",
+   c:"Disseminated infection in AIDS (CD4 <50); pulmonary disease in elderly women; hot tub lung",
+   d:"Runyon Group III (NONPHOTOCHROMOGEN); LADY WINDERMERE syndrome; disseminated in AIDS with CD4 <50"},
+  {id:85,name:"Mycobacterium kansasii",g:"Acid-fast",m:"Rods",o:"Obligate aerobe",
+   s:"Slow-growing · Niacin negative · Nitrate POSITIVE (like M. tb)",
+   c:"Pulmonary disease mimicking TB (especially in COPD); most clinically significant photochromogen",
+   d:"Runyon Group I (PHOTOCHROMOGEN — yellow ONLY with light); CROSS-BANDED rods on AFB smear; TB mimic"},
+  {id:86,name:"Mycobacterium marinum",g:"Acid-fast",m:"Rods",o:"Obligate aerobe",
+   s:"Slow-growing · Niacin negative · Grows at 30°C (poor/no growth at 37°C)",
+   c:"Chronic skin nodules on extremities with sporotrichoid lymphangitic spread",
+   d:"Runyon Group I (photochromogen); FISH TANK / SWIMMING POOL GRANULOMA; optimal at 30–32°C (not 37°C)"},
+  {id:87,name:"Mycobacterium gordonae",g:"Acid-fast",m:"Rods",o:"Obligate aerobe",
+   s:"Slow-growing · Niacin negative · Tween 80 hydrolysis positive",
+   c:"Usually nonpathogenic; most common NTM contaminant in clinical labs; rarely causes true disease",
+   d:"Runyon Group II (SCOTOCHROMOGEN — pigmented in BOTH light and dark); 'TAP WATER SCOTOCHROMOGEN'"},
+  {id:88,name:"Mycobacterium fortuitum",g:"Acid-fast",m:"Rods",o:"Obligate aerobe",
+   s:"RAPID grower (<7 days) · Nitrate positive · 3-day arylsulfatase positive",
+   c:"Post-surgical wound infections (mammaplasty), catheter infections; contaminated equipment",
+   d:"Runyon Group IV; grows on MacConkey agar (without crystal violet); POST-SURGICAL WOUND infections; iron uptake positive"},
+  {id:89,name:"Mycobacterium abscessus",g:"Acid-fast",m:"Rods",o:"Obligate aerobe",
+   s:"RAPID grower (<7 days) · Nitrate NEGATIVE (unlike M. fortuitum) · Arylsulfatase positive",
+   c:"Chronic pulmonary disease in cystic fibrosis; skin/soft tissue infections; most drug-resistant rapid-grower",
+   d:"Most DRUG-RESISTANT rapid-growing mycobacterium; smooth and rough variants; chronic CF lung disease; MacConkey growth"},
+  {id:90,name:"Mycobacterium chelonae",g:"Acid-fast",m:"Rods",o:"Obligate aerobe",
+   s:"RAPID grower · Nitrate negative · Arylsulfatase positive",
+   c:"Disseminated cutaneous infections in immunosuppressed (corticosteroid use); catheter/wound infections",
+   d:"Does NOT grow at 42°C (key vs M. abscessus which DOES); optimal 28–30°C; disseminated skin lesions with CORTICOSTEROIDS"},
+  {id:91,name:"Treponema pallidum",g:"Not visible (spirochete)",m:"Spirochete",o:"Microaerophilic",
+   s:"CANNOT be cultured on artificial media · Too thin for Gram stain · Darkfield microscopy",
+   c:"Primary syphilis (painless chancre), secondary (rash, condylomata lata), tertiary (gummas, aortitis), congenital, neurosyphilis",
+   d:"UNCULTIVABLE spirochete; RPR/VDRL screening confirmed by FTA-ABS/TP-PA; darkfield of chancre; SYPHILIS"},
+  {id:92,name:"Borrelia burgdorferi",g:"Negative",m:"Spirochete",o:"Microaerophilic",
+   s:"Loosely coiled · Culture on BSK-II medium · Poorly staining (use Giemsa/silver)",
+   c:"Arthritis, carditis, Bell palsy, meningitis; Ixodes tick vector; white-footed mouse reservoir",
+   d:"ERYTHEMA MIGRANS (bull's-eye rash); BSK-II medium; two-tier serology; IXODES tick; LYME DISEASE"},
+  {id:93,name:"Leptospira interrogans",g:"Not visible (spirochete)",m:"Spirochete",o:"Obligate aerobe",
+   s:"Hooked ends · Requires long-chain fatty acids · Darkfield visualization",
+   c:"Biphasic illness; severe Weil disease (jaundice, renal failure, hemorrhage); animal urine-contaminated water",
+   d:"HOOKED-END spirochete; Fletcher/EMJH semisolid media; WEIL DISEASE; RAT URINE-contaminated water; MAT serology"},
+  {id:94,name:"Mycoplasma pneumoniae",g:"None (no cell wall)",m:"Pleomorphic",o:"Facultative anaerobe",
+   s:"No cell wall → beta-lactam resistant · Requires cholesterol · Glucose fermenter",
+   c:"Walking pneumonia (atypical CAP) in young adults; bullous myringitis; erythema multiforme",
+   d:"FRIED-EGG colonies on SP4/Hayflick agar (1–3 weeks); COLD AGGLUTININS (IgM anti-I); WALKING PNEUMONIA in young adults"},
+  {id:95,name:"Ureaplasma urealyticum",g:"None (no cell wall)",m:"Pleomorphic",o:"Facultative anaerobe",
+   s:"No cell wall → beta-lactam resistant · Urease POSITIVE (unlike Mycoplasma) · Does NOT ferment glucose",
+   c:"Nongonococcal urethritis, chorioamnionitis, neonatal pneumonia in premature infants",
+   d:"Named for UREASE activity; tiny colonies (15–60 μm) on A8 agar — much smaller than Mycoplasma fried-egg colonies"},
+  {id:96,name:"Chlamydia trachomatis",g:"None (obligate intracellular)",m:"Obligate intracellular",o:"Not applicable",
+   s:"EB (infectious) / RB (replicating) lifecycle · Susceptible to sulfonamides · NAAT for diagnosis",
+   c:"#1 bacterial STI in the US, trachoma (leading infectious cause of blindness), LGV, neonatal conjunctivitis/pneumonia",
+   d:"GLYCOGEN-POSITIVE inclusions (iodine stain); EB/RB lifecycle; McCoy cell culture; #1 BACTERIAL STI; TRACHOMA; LGV"},
+  {id:97,name:"Chlamydophila pneumoniae",g:"None (obligate intracellular)",m:"Obligate intracellular",o:"Not applicable",
+   s:"Glycogen-NEGATIVE inclusions (unlike C. trachomatis) · Sulfonamide RESISTANT · Single serovar",
+   c:"Atypical CAP, pharyngitis, bronchitis; person-to-person respiratory; NO animal reservoir",
+   d:"PEAR-SHAPED elementary body (vs round in C. trachomatis); TWAR agent; glycogen-negative; no animal reservoir"},
+  {id:98,name:"Rickettsia rickettsii",g:"Negative",m:"Obligate intracellular",o:"Aerobe (intracellular)",
+   s:"Obligate intracellular · Infects vascular endothelial cells · Cannot grow cell-free",
+   c:"Fever, headache, petechial rash beginning on wrists/ankles spreading centripetally; tick-borne",
+   d:"DERMACENTOR tick; rash WRISTS/ANKLES → CENTER; Weil-Felix OX-19/OX-2; ROCKY MOUNTAIN SPOTTED FEVER"},
+  {id:99,name:"Coxiella burnetii",g:"Negative",m:"Obligate intracellular",o:"Aerobe (intracellular)",
+   s:"Obligate intracellular · Survives in phagolysosome (pH 4.5) · Endospore-like small cell variant",
+   c:"Acute Q fever (pneumonia, hepatitis) and chronic (culture-negative endocarditis); livestock aerosols",
+   d:"BSL-3; Phase I (virulent) / Phase II (avirulent) variation; Q FEVER; NOT TICK-BORNE (livestock aerosol); culture-negative endocarditis"},
+  {id:100,name:"Ehrlichia chaffeensis",g:"Negative",m:"Obligate intracellular",o:"Not applicable",
+   s:"Grows in monocytes/macrophages · PCR preferred · Cannot grow cell-free",
+   c:"Fever, leukopenia, thrombocytopenia, elevated transaminases; tick-borne",
+   d:"MORULAE (mulberry inclusions) in MONOCYTES on peripheral smear; LONE STAR TICK (Amblyomma americanum); HUMAN MONOCYTIC EHRLICHIOSIS"},
+  {id:101,name:"Anaplasma phagocytophilum",g:"Negative",m:"Obligate intracellular",o:"Not applicable",
+   s:"Grows in NEUTROPHILS (NOT monocytes) · PCR preferred · Cannot grow cell-free",
+   c:"Fever, leukopenia, thrombocytopenia; Ixodes tick — coinfection with Lyme and Babesia possible",
+   d:"MORULAE in NEUTROPHILS (not monocytes); IXODES tick; coinfection with Lyme/Babesia; HUMAN GRANULOCYTIC ANAPLASMOSIS"},
+];
+
+const EASY_NAMES = [
+  "Staphylococcus aureus","Escherichia coli","Pseudomonas aeruginosa",
+  "Streptococcus pyogenes","Clostridioides difficile","Streptococcus pneumoniae",
+  "Klebsiella pneumoniae","Campylobacter jejuni","Neisseria gonorrhoeae",
+  "Proteus mirabilis","Mycobacterium tuberculosis","Clostridium perfringens",
+  "Helicobacter pylori","Salmonella enterica (non-typhoidal)",
+];
+
+const ARCHIVE_START = "2026-03-18";
+const HINTS = [
+  {key:"g",label:"Gram Stain",icon:"🔬"},
+  {key:"m",label:"Morphology",icon:"🧫"},
+  {key:"o",label:"O₂ Requirement",icon:"💨"},
+  {key:"s",label:"Screening Tests",icon:"⚗️"},
+  {key:"c",label:"Clinical Clue",icon:"🏥"},
+  {key:"d",label:"Identification",icon:"🎯"},
+];
+
+// ── Utility functions ────────────────────────────────────────────
+function ds(d){ return d.toISOString().split("T")[0]; }
+function db(a,b){ return Math.round((new Date(b)-new Date(a))/864e5); }
+function pn(d){ return db(ARCHIVE_START,d)+1; }
+function fs(d){ return new Date(d+"T12:00:00").toLocaleDateString("en-US",{weekday:"short",month:"short",day:"numeric"}); }
+function fl(d){ return new Date(d+"T12:00:00").toLocaleDateString("en-US",{weekday:"long",month:"long",day:"numeric",year:"numeric"}); }
+
+function seededShuffle(arr,seed){
+  const a=[...arr]; let s=seed;
+  for(let i=a.length-1;i>0;i--){
+    s=(s*1103515245+12345)&0x7fffffff;
+    const j=s%(i+1);
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function getOrg(dateStr){
+  const di=db(ARCHIVE_START,dateStr);
+  if(di>=0&&di<EASY_NAMES.length) return ORGANISMS.find(o=>o.name===EASY_NAMES[di])||ORGANISMS[0];
+  const used=new Set(EASY_NAMES);
+  const rest=ORGANISMS.filter(o=>!used.has(o.name));
+  const sh=seededShuffle(rest,7919);
+  return sh[((di-EASY_NAMES.length)%rest.length+rest.length)%rest.length];
+}
+
+function archiveDates(){
+  const t=new Date(), ts=ds(t), dates=[], st=new Date(ARCHIVE_START);
+  for(let d=new Date(st);ds(d)<=ts;d.setDate(d.getDate()+1)) dates.push(ds(d));
+  return dates.reverse();
+}
+
+// ── localStorage (replaces window.storage) ──────────────────────
+function loadDone(){
+  try{ return JSON.parse(localStorage.getItem("mb_done")||"{}"); }catch{ return {}; }
+}
+function saveDone(done){
+  try{ localStorage.setItem("mb_done",JSON.stringify(done)); }catch{}
+}
+
+// ── State ────────────────────────────────────────────────────────
+const today = ds(new Date());
+let state = {
+  view: "game",
+  gameDate: today,
+  hints: 1,
+  guesses: [],
+  input: "",
+  over: false,
+  won: false,
+  showAC: false,
+  acI: -1,
+  animIdx: null,
+  done: loadDone(),
+};
+
+function getOrg_(){
+  return getOrg(state.gameDate);
+}
+
+function getFilt(){
+  if(!state.input.trim()) return [];
+  const q=state.input.toLowerCase();
+  return ORGANISMS.filter(o=>o.name.toLowerCase().includes(q))
+                  .filter(o=>!state.guesses.includes(o.name))
+                  .slice(0,8);
+}
+
+// ── Render ───────────────────────────────────────────────────────
+function render(){
+  const content = document.getElementById("main-content");
+  if(state.view==="how")       content.innerHTML = renderHow();
+  else if(state.view==="archive") content.innerHTML = renderArchive();
+  else                         content.innerHTML = renderGame();
+  bindEvents();
+}
+
+function renderHow(){
+  return `<div class="view narrow" id="how-view">
+    <h2>How to Play</h2>
+    <div class="how-body">
+      <p>Identify the mystery organism in as few hints as possible.</p>
+      <p>You start with <strong style="color:#e8eaf0">one broad clue</strong> (Gram stain). Each wrong guess or skip reveals the next hint — from broad screening to definitive identification.</p>
+      <div class="how-hints-box">
+        ${HINTS.map((h,i)=>`<div class="how-hint-row"><span class="num">${i+1}.</span> ${h.icon} ${h.label}${i===5?" — the giveaway":""}</div>`).join("")}
+      </div>
+      <p class="how-legend"><span style="color:#4ade80">🟩 solved</span>&nbsp;&nbsp;<span style="color:#e8576e">🟥 wrong/skipped</span>&nbsp;&nbsp;<span style="color:#555c72">⬛ unused</span></p>
+      <p class="how-note">101 organisms aligned to the ASCP SM exam scope.</p>
+    </div>
+    <button class="got-it-btn" id="got-it-btn">Got it</button>
+  </div>`;
+}
+
+function renderArchive(){
+  const dates=archiveDates();
+  const items=dates.map(d=>{
+    const c2=state.done[d]; const isT=d===today;
+    let scoreHtml;
+    if(c2){
+      scoreHtml=c2.won
+        ?`<span class="arch-score-win">${c2.score}/6 ✓</span>`
+        :`<span class="arch-score-lose">X/6</span>`;
+    } else {
+      scoreHtml=`<span class="arch-score-none">—</span>`;
+    }
+    return `<button class="archive-item${isT?" today":""}" data-date="${d}">
+      <span><span class="arch-num">#${pn(d)}</span>${fs(d)}${isT?`<span class="arch-today-badge">TODAY</span>`:""}</span>
+      <span>${scoreHtml}</span>
+    </button>`;
+  }).join("");
+  return `<div class="view narrow" id="archive-view">
+    <h2>Puzzle Archive</h2>
+    <div class="archive-list">${items}</div>
+  </div>`;
+}
+
+function renderGame(){
+  const org=getOrg_();
+  const {hints,guesses,over,won,showAC,acI,animIdx,gameDate,input,done}=state;
+  const filt=getFilt();
+  const savedGame=done[gameDate];
+
+  // Puzzle header
+  const todayBtn=gameDate!==today
+    ?`<button class="goto-today-btn" id="goto-today-btn">today →</button>`:"";
+  const header=`<div id="game-date-info">
+    <div class="puzzle-num">Puzzle #${pn(gameDate)}</div>
+    <div class="puzzle-date">${fl(gameDate)}${todayBtn}</div>
+  </div>`;
+
+  // Hint cards
+  const hintCards=HINTS.map((h,i)=>{
+    const rev=i<hints;
+    const isLast=i===5;
+    let cls="hint-card";
+    if(rev) cls+=" revealed"; else cls+=" unrevealed";
+    if(animIdx===i) cls+=" animating";
+    if(isLast&&rev&&over){
+      if(won) cls+=" last-win"; else cls+=" last-lose";
+    }
+    const labelCls=rev?"hint-label":"hint-label dim";
+    const numTag=!rev?`<span class="hint-num-tag">Hint ${i+1}</span>`:"";
+    const body=rev?`<div class="hint-body${isLast?" last":""}">${escHtml(org[h.key])}</div>`:"";
+    return `<div class="${cls}">${body?`<div class="hint-header"><span class="hint-icon">${h.icon}</span><span class="${labelCls}">${h.label}</span>${numTag}</div>${body}`:`<div class="hint-header"><span class="hint-icon">${h.icon}</span><span class="${labelCls}">${h.label}</span>${numTag}</div>`}</div>`;
+  }).join("");
+
+  // Guesses section
+  let guessesHtml="";
+  if(guesses.length>0){
+    const chips=guesses.map(g=>`<span class="guess-chip ${g===org.name?"correct":"wrong"}">${escHtml(g)}</span>`).join("");
+    guessesHtml=`<div id="guesses-section"><div class="guesses-label">Your guesses</div><div class="guesses-list">${chips}</div></div>`;
+  }
+
+  // Result banner
+  let resultHtml="";
+  if(over){
+    const sc=savedGame?.score||guesses.length;
+    const w=savedGame?.won??won;
+    if(w){
+      resultHtml=`<div id="result-banner" class="win">
+        <div class="result-emoji">🦠</div>
+        <div class="result-label-win">Identified!</div>
+        <div class="result-name">${escHtml(org.name)}</div>
+        <div class="result-score">Solved in ${sc} hint${sc>1?"s":""}</div>
+        <div class="result-btns">
+          <button class="share-btn" id="share-btn">Share result</button>
+          <button class="archive-link-btn" id="to-archive-btn">Browse archive</button>
+        </div>
+      </div>`;
+    } else {
+      resultHtml=`<div id="result-banner" class="lose">
+        <div class="result-emoji">💀</div>
+        <div class="result-label-lose">Not this time</div>
+        <div class="result-name">${escHtml(org.name)}</div>
+        <div class="result-def">${escHtml(org.d)}</div>
+        <div class="result-btns">
+          <button class="share-btn" id="share-btn">Share result</button>
+          <button class="archive-link-btn" id="to-archive-btn">Browse archive</button>
+        </div>
+      </div>`;
+    }
+  }
+
+  // Input row
+  let acHtml="";
+  if(showAC&&filt.length>0){
+    acHtml=`<div id="autocomplete">${filt.map((o,i)=>`<div class="ac-item${i===acI?" active":""}" data-name="${escAttr(o.name)}">${escHtml(o.name)}</div>`).join("")}</div>`;
+  }
+  const skipDisabled=hints>=6?"disabled":"";
+  const inputHtml=!over?`<div id="input-row">
+    <div class="input-flex">
+      <div class="input-wrap">
+        <input id="org-input" type="text" placeholder="Type organism name..." autocomplete="off" value="${escAttr(input)}">
+        ${acHtml}
+      </div>
+      <button id="skip-btn" ${skipDisabled}>Skip →</button>
+    </div>
+    <div class="input-info">${6-guesses.length} guess${6-guesses.length!==1?"es":""} remaining · Hint ${hints} of 6</div>
+  </div>`:"";
+
+  // Score dots
+  let dotsHtml="";
+  if(over){
+    const sc2=savedGame?.score||guesses.length;
+    const w2=savedGame?.won??won;
+    const dots=HINTS.map((_,i)=>{
+      let bg="#252a36";
+      if(w2&&i===sc2-1) bg="#4ade80";
+      else if(i<(w2?sc2:6)) bg="#e8576e";
+      const delay=i*80;
+      return `<div class="score-dot" style="background:${bg};opacity:${bg==="#252a36"?"0.3":"0.8"};transition-delay:${delay}ms"></div>`;
+    }).join("");
+    dotsHtml=`<div id="score-dots">${dots}</div>`;
+  }
+
+  return `<div class="view" id="game-view">
+    ${header}
+    <div id="hints-container">${hintCards}</div>
+    ${guessesHtml}
+    ${resultHtml}
+    ${inputHtml}
+    ${dotsHtml}
+  </div>`;
+}
+
+// ── HTML escape helpers ──────────────────────────────────────────
+function escHtml(s){
+  return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+function escAttr(s){
+  return String(s).replace(/"/g,"&quot;");
+}
+
+// ── Share text ───────────────────────────────────────────────────
+function shareText(){
+  const s=state.done[state.gameDate]; if(!s) return "";
+  const sc=s.won?s.score:"X";
+  const b=HINTS.map((_,i)=>{
+    if(s.won&&i===s.score-1) return "🟩";
+    if(i<(s.won?s.score:6)) return "🟥";
+    return "⬛";
+  }).join("");
+  return `🦠 MicrobeLE #${pn(state.gameDate)} ${sc}/6\n${b}`;
+}
+
+// ── Game actions ─────────────────────────────────────────────────
+function doGuess(name){
+  const g=name||state.input.trim();
+  if(!g||state.over) return;
+  const match=ORGANISMS.find(o=>o.name.toLowerCase()===g.toLowerCase());
+  if(!match) return;
+  const ng=[...state.guesses, match.name];
+  state.guesses=ng;
+  state.input="";
+  state.showAC=false;
+  state.acI=-1;
+  if(match.name===getOrg_().name){
+    state.won=true; state.over=true; state.hints=6;
+    const nd={...state.done,[state.gameDate]:{score:ng.length,won:true}};
+    state.done=nd; saveDone(nd);
+  } else if(ng.length>=6){
+    state.over=true; state.hints=6;
+    const nd={...state.done,[state.gameDate]:{score:6,won:false}};
+    state.done=nd; saveDone(nd);
+  } else {
+    const h=Math.min(state.hints+1,6);
+    state.animIdx=h-1;
+    state.hints=h;
+    render();
+    setTimeout(()=>{ state.animIdx=null; render(); },600);
+    return;
+  }
+  render();
+}
+
+function doSkip(){
+  if(state.over||state.hints>=6) return;
+  const h=state.hints+1;
+  state.animIdx=h-1;
+  state.hints=h;
+  render();
+  setTimeout(()=>{ state.animIdx=null; render(); },600);
+}
+
+function setGameDate(d){
+  state.gameDate=d;
+  const s=state.done[d];
+  if(s){
+    state.over=true; state.won=s.won; state.hints=6; state.guesses=[];
+  } else {
+    state.over=false; state.won=false; state.hints=1; state.guesses=[]; state.input="";
+  }
+  state.showAC=false; state.acI=-1; state.animIdx=null;
+}
+
+// ── Event binding ────────────────────────────────────────────────
+function bindEvents(){
+  // Header
+  document.getElementById("hdr-how-btn").onclick=()=>{ state.view="how"; render(); };
+  document.getElementById("hdr-logo").onclick=()=>{ setGameDate(today); state.view="game"; render(); };
+  document.getElementById("hdr-archive-btn").onclick=()=>{ state.view="archive"; render(); };
+
+  if(state.view==="how"){
+    document.getElementById("got-it-btn").onclick=()=>{ state.view="game"; render(); };
+  }
+
+  if(state.view==="archive"){
+    document.querySelectorAll(".archive-item").forEach(btn=>{
+      btn.onclick=()=>{ setGameDate(btn.dataset.date); state.view="game"; render(); };
+    });
+  }
+
+  if(state.view==="game"){
+    const gotoToday=document.getElementById("goto-today-btn");
+    if(gotoToday) gotoToday.onclick=()=>{ setGameDate(today); render(); };
+
+    const shareBtn=document.getElementById("share-btn");
+    if(shareBtn) shareBtn.onclick=()=>{ navigator.clipboard.writeText(shareText()); };
+
+    const toArchive=document.getElementById("to-archive-btn");
+    if(toArchive) toArchive.onclick=()=>{ state.view="archive"; render(); };
+
+    const skipBtn=document.getElementById("skip-btn");
+    if(skipBtn) skipBtn.onclick=doSkip;
+
+    const orgInput=document.getElementById("org-input");
+    if(orgInput){
+      orgInput.focus();
+      orgInput.oninput=e=>{
+        state.input=e.target.value;
+        state.showAC=true;
+        state.acI=-1;
+        renderAC();
+      };
+      orgInput.onfocus=()=>{ state.showAC=true; renderAC(); };
+      orgInput.onblur=()=>{ setTimeout(()=>{ state.showAC=false; renderAC(); },200); };
+      orgInput.onkeydown=e=>{
+        const filt=getFilt();
+        if(e.key==="ArrowDown"){
+          e.preventDefault();
+          state.acI=Math.min(state.acI+1,filt.length-1);
+          renderAC();
+        } else if(e.key==="ArrowUp"){
+          e.preventDefault();
+          state.acI=Math.max(state.acI-1,0);
+          renderAC();
+        } else if(e.key==="Enter"){
+          e.preventDefault();
+          if(state.acI>=0&&filt[state.acI]) doGuess(filt[state.acI].name);
+          else if(filt.length===1) doGuess(filt[0].name);
+          else if(state.input.trim()) doGuess(state.input.trim());
+        } else if(e.key==="Escape"){
+          state.showAC=false;
+          renderAC();
+        }
+      };
+    }
+
+    bindACEvents();
+  }
+}
+
+function renderAC(){
+  const wrap=document.querySelector(".input-wrap");
+  if(!wrap) return;
+  let ac=document.getElementById("autocomplete");
+  const filt=getFilt();
+  if(!state.showAC||filt.length===0){
+    if(ac) ac.remove();
+    return;
+  }
+  const html=`<div id="autocomplete">${filt.map((o,i)=>`<div class="ac-item${i===state.acI?" active":""}" data-name="${escAttr(o.name)}">${escHtml(o.name)}</div>`).join("")}</div>`;
+  if(ac) ac.outerHTML=html;
+  else wrap.insertAdjacentHTML("beforeend",html);
+  bindACEvents();
+}
+
+function bindACEvents(){
+  document.querySelectorAll(".ac-item").forEach((el,i)=>{
+    el.onmousedown=e=>{ e.preventDefault(); doGuess(el.dataset.name); };
+    el.onmouseenter=()=>{ state.acI=i; renderAC(); };
+    el.onmouseleave=()=>{ state.acI=-1; renderAC(); };
+  });
+}
+
+// ── Init ─────────────────────────────────────────────────────────
+(function init(){
+  // Load saved game state for today
+  const s=state.done[state.gameDate];
+  if(s){
+    state.over=true; state.won=s.won; state.hints=6; state.guesses=[];
+  }
+  render();
+})();
+</script>
+</body>
+</html>
