@@ -39,7 +39,8 @@
   #hdr-how-btn{font-size:13px}
 
   /* Views */
-  .view{max-width:560px;margin:0 auto;padding:20px 20px 100px;animation:fi 0.3s ease}
+  .view{max-width:560px;margin:0 auto;padding:20px 20px 100px}
+  .view.entering{animation:fi 0.3s ease}
   .view.narrow{max-width:520px}
 
   /* How to play */
@@ -648,6 +649,7 @@ function saveDone(done){
 
 // ── State ────────────────────────────────────────────────────────
 const today = ds(new Date());
+let prevView = null;
 let state = {
   view: "game",
   gameDate: today,
@@ -676,10 +678,19 @@ function getFilt(){
 
 // ── Render ───────────────────────────────────────────────────────
 function render(){
+  const switching = prevView !== state.view;
+  prevView = state.view;
   const content = document.getElementById("main-content");
-  if(state.view==="how")       content.innerHTML = renderHow();
+  if(state.view==="how")          content.innerHTML = renderHow();
   else if(state.view==="archive") content.innerHTML = renderArchive();
-  else                         content.innerHTML = renderGame();
+  else                            content.innerHTML = renderGame();
+  if(switching){
+    const viewEl=content.querySelector(".view");
+    if(viewEl){
+      viewEl.classList.add("entering");
+      viewEl.addEventListener("animationend",()=>viewEl.classList.remove("entering"),{once:true});
+    }
+  }
   bindEvents();
 }
 
@@ -791,21 +802,17 @@ function renderGame(){
 
   // Input row
   let acHtml="";
-  if(showAC&&filt.length>0){
-    acHtml=`<div id="autocomplete">${filt.map((o,i)=>`<div class="ac-item${i===acI?" active":""}" data-name="${escAttr(o.name)}">${escHtml(o.name)}</div>`).join("")}</div>`;
-  }
   const skipDisabled=hints>=6?"disabled":"";
   const inputHtml=!over?`<div id="input-row">
     <div class="input-flex">
       <div class="input-wrap">
         <input id="org-input" type="text" placeholder="Type organism name..." autocomplete="off" value="${escAttr(input)}">
-        ${acHtml}
       </div>
       <button id="skip-btn" ${skipDisabled}>Skip →</button>
     </div>
     <div class="input-info">${6-guesses.length} guess${6-guesses.length!==1?"es":""} remaining · Hint ${hints} of 6</div>
   </div>`:"";
-
+  void acHtml;
   // Score dots
   let dotsHtml="";
   if(over){
@@ -852,6 +859,17 @@ function shareText(){
 }
 
 // ── Game actions ─────────────────────────────────────────────────
+function animateHintCard(){
+  requestAnimationFrame(()=>{
+    const card=document.querySelector(".hint-card.animating");
+    if(card){
+      card.addEventListener("animationend",()=>card.classList.remove("animating"),{once:true});
+      setTimeout(()=>card.classList.remove("animating"),700); // fallback
+    }
+    state.animIdx=null;
+  });
+}
+
 function doGuess(name){
   const g=name||state.input.trim();
   if(!g||state.over) return;
@@ -875,7 +893,7 @@ function doGuess(name){
     state.animIdx=h-1;
     state.hints=h;
     render();
-    setTimeout(()=>{ state.animIdx=null; render(); },600);
+    animateHintCard();
     return;
   }
   render();
@@ -886,8 +904,13 @@ function doSkip(){
   const h=state.hints+1;
   state.animIdx=h-1;
   state.hints=h;
+  if(h>=6&&!state.won){
+    state.over=true;
+    const nd={...state.done,[state.gameDate]:{score:6,won:false}};
+    state.done=nd; saveDone(nd);
+  }
   render();
-  setTimeout(()=>{ state.animIdx=null; render(); },600);
+  animateHintCard();
 }
 
 function setGameDate(d){
@@ -963,31 +986,47 @@ function bindEvents(){
         }
       };
     }
-
-    bindACEvents();
   }
 }
 
 function renderAC(){
   const wrap=document.querySelector(".input-wrap");
   if(!wrap) return;
-  let ac=document.getElementById("autocomplete");
   const filt=getFilt();
+
+  let ac=document.getElementById("autocomplete");
+
   if(!state.showAC||filt.length===0){
     if(ac) ac.remove();
     return;
   }
-  const html=`<div id="autocomplete">${filt.map((o,i)=>`<div class="ac-item${i===state.acI?" active":""}" data-name="${escAttr(o.name)}">${escHtml(o.name)}</div>`).join("")}</div>`;
-  if(ac) ac.outerHTML=html;
-  else wrap.insertAdjacentHTML("beforeend",html);
-  bindACEvents();
-}
 
-function bindACEvents(){
-  document.querySelectorAll(".ac-item").forEach((el,i)=>{
-    el.onmousedown=e=>{ e.preventDefault(); doGuess(el.dataset.name); };
-    el.onmouseenter=()=>{ state.acI=i; renderAC(); };
-    el.onmouseleave=()=>{ state.acI=-1; renderAC(); };
+  if(!ac){
+    ac=document.createElement("div");
+    ac.id="autocomplete";
+    wrap.appendChild(ac);
+    // Prevent input blur when interacting with the dropdown
+    ac.addEventListener("mousedown",e=>e.preventDefault());
+    // Single delegated click handler — robust regardless of inner DOM changes
+    ac.addEventListener("click",e=>{
+      const item=e.target.closest(".ac-item");
+      if(item) doGuess(item.dataset.name);
+    });
+  }
+
+  // Rebuild list contents
+  ac.innerHTML=filt.map((o,i)=>`<div class="ac-item${i===state.acI?" active":""}" data-name="${escAttr(o.name)}">${escHtml(o.name)}</div>`).join("");
+
+  // Hover highlighting — only touch CSS classes, no DOM replacement
+  ac.querySelectorAll(".ac-item").forEach((el,i)=>{
+    el.addEventListener("mouseenter",()=>{
+      state.acI=i;
+      ac.querySelectorAll(".ac-item").forEach((e,j)=>e.classList.toggle("active",j===i));
+    });
+    el.addEventListener("mouseleave",()=>{
+      state.acI=-1;
+      el.classList.remove("active");
+    });
   });
 }
 
