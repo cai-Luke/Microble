@@ -110,6 +110,7 @@
     border-radius:6px;font-style:italic}
   .guess-chip.correct{background:rgba(74,222,128,0.15);border:1px solid #166534;color:#4ade80}
   .guess-chip.wrong{background:rgba(232,87,110,0.08);border:1px solid #b83a4e;color:#e8576e}
+  .guess-chip.skipped { background:rgba(85,92,114,0.15); border:1px solid #555c72; color:#8b92a8; font-style:normal; }
 
   /* Result banner */
   #result-banner{border-radius:12px;padding:20px;text-align:center;margin-bottom:20px}
@@ -766,7 +767,7 @@ function renderGame(){
   // Guesses section
   let guessesHtml="";
   if(guesses.length>0){
-    const chips=guesses.map(g=>`<span class="guess-chip ${g===org.name?"correct":"wrong"}">${escHtml(g)}</span>`).join("");
+    const chips=guesses.map(g=>`<span class="guess-chip ${g===org.name?"correct":g==="Skipped"?"skipped":"wrong"}">${escHtml(g)}</span>`).join("");
     guessesHtml=`<div id="guesses-section"><div class="guesses-label">Your guesses</div><div class="guesses-list">${chips}</div></div>`;
   }
 
@@ -875,11 +876,13 @@ function doGuess(name){
   if(!g||state.over) return;
   const match=ORGANISMS.find(o=>o.name.toLowerCase()===g.toLowerCase());
   if(!match) return;
+
   const ng=[...state.guesses, match.name];
   state.guesses=ng;
   state.input="";
   state.showAC=false;
   state.acI=-1;
+
   if(match.name===getOrg_().name){
     state.won=true; state.over=true; state.hints=6;
     const nd={...state.done,[state.gameDate]:{score:ng.length,won:true}};
@@ -888,11 +891,13 @@ function doGuess(name){
     const h=Math.min(state.hints+1,6);
     state.animIdx=h-1;
     state.hints=h;
-    if(h>=6){
+
+    if(ng.length>=6){
       state.over=true;
       const nd={...state.done,[state.gameDate]:{score:6,won:false}};
       state.done=nd; saveDone(nd);
     }
+
     render();
     animateHintCard();
     return;
@@ -901,10 +906,21 @@ function doGuess(name){
 }
 
 function doSkip(){
-  if(state.over||state.hints>=6) return;
-  const h=state.hints+1;
+  if(state.over||state.guesses.length>=6) return;
+
+  const ng=[...state.guesses, "Skipped"];
+  state.guesses=ng;
+
+  const h=Math.min(state.hints+1,6);
   state.animIdx=h-1;
   state.hints=h;
+
+  if(ng.length>=6){
+    state.over=true;
+    const nd={...state.done,[state.gameDate]:{score:6,won:false}};
+    state.done=nd; saveDone(nd);
+  }
+
   render();
   animateHintCard();
 }
