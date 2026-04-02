@@ -905,11 +905,6 @@ function doSkip(){
   const h=state.hints+1;
   state.animIdx=h-1;
   state.hints=h;
-  if(h>=6&&!state.won){
-    state.over=true;
-    const nd={...state.done,[state.gameDate]:{score:6,won:false}};
-    state.done=nd; saveDone(nd);
-  }
   render();
   animateHintCard();
 }
